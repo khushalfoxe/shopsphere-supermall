@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offer Management | ShopSphere</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
+
+body{
+background:linear-gradient(135deg,#000000,#1a1a1a);
+color:white;
+}
+
+/* NAVBAR */
+.navbar{
+display:flex;
+justify-content:space-between;
+padding:20px 60px;
+background:rgba(0,0,0,0.85);
+border-bottom:1px solid rgba(255,215,0,0.3);
+}
+
+.logo{
+font-weight:600;
+font-size:20px;
+color:gold;
+}
+
+.navbar a{
+color:gold;
+text-decoration:none;
+}
+
+/* CONTAINER */
+.container{
+max-width:800px;
+margin:auto;
+padding:40px 20px;
+}
+
+/* FORM */
+.form{
+background:rgba(255,255,255,0.08);
+padding:25px;
+border-radius:16px;
+border:1px solid rgba(255,215,0,0.3);
+}
+
+.form h2{color:gold;}
+
+input,select{
+width:100%;
+padding:12px;
+margin:12px 0;
+border-radius:8px;
+border:1px solid gold;
+background:black;
+color:white;
+}
+
+/* BUTTONS */
+button{
+padding:10px 14px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-weight:600;
+}
+
+.addBtn{
+width:100%;
+background:linear-gradient(45deg,gold,#d4af37);
+color:black;
+}
+
+.addBtn:hover{opacity:0.9;}
+
+/* OFFER CARD */
+.offer{
+background:rgba(255,255,255,0.08);
+padding:15px;
+border-radius:12px;
+margin-top:15px;
+border:1px solid rgba(255,215,0,0.25);
+}
+
+.actions{margin-top:8px;}
+
+.edit{background:gold;color:black;}
+.delete{background:red;color:white;}
+
+/* MODAL */
+.modal{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.7);
+justify-content:center;
+align-items:center;
+}
+
+.modal-box{
+background:black;
+padding:25px;
+border-radius:12px;
+width:300px;
+border:1px solid gold;
+}
+
+.modal-box input{
+width:100%;
+padding:10px;
+margin:8px 0;
+background:black;
+color:white;
+border:1px solid gold;
+}
+
+.save{
+background:gold;
+color:black;
+width:100%;
+padding:12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+<div class="logo">ShopSphere Admin</div>
+<a href="dashboard.html">← Dashboard</a>
+</div>
+
+<div class="container">
+
+<div class="form">
+<h2>Add Offer</h2>
+
+<label>Select Shop</label>
+<select id="shopSelect"></select>
+
+<input id="title" placeholder="Offer Title">
+<input id="discount" type="number" placeholder="Discount %">
+
+<label>Valid Till</label>
+<input id="valid" type="date">
+
+<button class="addBtn" onclick="addOffer()">Add Offer</button>
+</div>
+
+<h2 style="margin-top:30px;color:gold;">Manage Offers</h2>
+<div id="offerList"></div>
+
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal" id="modal">
+<div class="modal-box">
+<h3>Edit Offer</h3>
+
+<input id="eTitle">
+<input id="eDiscount" type="number">
+<input id="eValid" type="date">
+
+<button class="save" onclick="updateOffer()">Save Changes</button>
+
+</div>
+</div>
+
+<script type="module">
+
+import { db } from './js/firebase-config.js';
+import {
+collection,
+addDoc,
+getDocs,
+deleteDoc,
+doc,
+updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+console.log("Offer Management page opened");
+
+const shopSelect=document.getElementById("shopSelect");
+const offerList=document.getElementById("offerList");
+
+let editId="";
+
+/* LOAD SHOPS */
+async function loadShops(){
+console.log("Loading shops...");
+const snap=await getDocs(collection(db,"shops"));
+shopSelect.innerHTML="";
+snap.forEach(s=>{
+shopSelect.innerHTML+=`<option>${s.data().name}</option>`;
+});
+console.log("Shops loaded:",snap.size);
+}
+loadShops();
+
+/* ADD OFFER */
+window.addOffer = async ()=>{
+
+const t=title.value.trim();
+const d=discount.value;
+const v=valid.value;
+const shop=shopSelect.value;
+
+console.log("Attempting to add offer:",t);
+
+if(!t||!d){
+alert("Fill fields");
+console.warn("Offer add blocked — missing fields");
+return;
+}
+
+await addDoc(collection(db,"offers"),{
+title:t,
+discount:d,
+shop,
+validTill:v,
+created:new Date()
+});
+
+console.log("Offer added:",t);
+
+alert("✅ Offer Added");
+
+title.value="";
+discount.value="";
+valid.value="";
+
+loadOffers();
+};
+
+/* LOAD OFFERS */
+async function loadOffers(){
+
+console.log("Loading offers...");
+
+offerList.innerHTML="";
+
+const snap=await getDocs(collection(db,"offers"));
+
+snap.forEach(o=>{
+const d=o.data();
+
+offerList.innerHTML+=`
+<div class="offer">
+<b>${d.title}</b>
+<p>Shop: ${d.shop}</p>
+<p>Discount: ${d.discount}%</p>
+<p>Valid Till: ${d.validTill||"N/A"}</p>
+
+<div class="actions">
+<button class="edit" onclick="openEdit('${o.id}','${d.title}','${d.discount}','${d.validTill||""}')">Edit</button>
+<button class="delete" onclick="delOffer('${o.id}')">Delete</button>
+</div>
+</div>`;
+});
+
+console.log("Offers loaded:",snap.size);
+}
+
+loadOffers();
+
+/* DELETE */
+window.delOffer = async(id)=>{
+if(confirm("Delete this offer?")){
+console.log("Deleting offer:",id);
+await deleteDoc(doc(db,"offers",id));
+loadOffers();
+}
+};
+
+/* OPEN EDIT */
+window.openEdit=(id,t,d,v)=>{
+console.log("Editing offer:",t);
+editId=id;
+eTitle.value=t;
+eDiscount.value=d;
+eValid.value=v;
+modal.style.display="flex";
+};
+
+/* UPDATE */
+window.updateOffer=async()=>{
+console.log("Updating offer:",eTitle.value);
+
+await updateDoc(doc(db,"offers",editId),{
+title:eTitle.value,
+discount:eDiscount.value,
+validTill:eValid.value
+});
+
+modal.style.display="none";
+loadOffers();
+alert("✅ Updated");
+};
+
+</script>
+
+</body>
+</html>

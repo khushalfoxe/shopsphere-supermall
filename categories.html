@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mall Structure | ShopSphere</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
+
+body{
+background:linear-gradient(135deg,#000000,#1a1a1a);
+color:white;
+}
+
+/* NAVBAR */
+.navbar{
+display:flex;
+justify-content:space-between;
+padding:20px 60px;
+background:rgba(0,0,0,0.85);
+border-bottom:1px solid rgba(255,215,0,0.3);
+}
+
+.logo{
+font-weight:600;
+font-size:20px;
+color:gold;
+}
+
+.navbar a{
+color:gold;
+text-decoration:none;
+}
+
+/* CONTAINER */
+.container{
+max-width:900px;
+margin:auto;
+padding:40px 20px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:25px;
+}
+
+/* CARD */
+.card{
+background:rgba(255,255,255,0.08);
+padding:25px;
+border-radius:16px;
+border:1px solid rgba(255,215,0,0.3);
+}
+
+h2{
+color:gold;
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:10px 0;
+border-radius:8px;
+border:1px solid gold;
+background:black;
+color:white;
+}
+
+/* BUTTONS */
+button{
+padding:10px 14px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-weight:600;
+}
+
+.addBtn{
+width:100%;
+background:linear-gradient(45deg,gold,#d4af37);
+color:black;
+}
+
+.list{margin-top:15px;}
+
+.item{
+background:rgba(255,255,255,0.08);
+padding:10px;
+border-radius:8px;
+display:flex;
+justify-content:space-between;
+margin-bottom:8px;
+border:1px solid rgba(255,215,0,0.25);
+}
+
+.delete{
+background:red;
+color:white;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+<div class="logo">ShopSphere Admin</div>
+<a href="dashboard.html">← Dashboard</a>
+</div>
+
+<div class="container">
+
+<!-- CATEGORY -->
+<div class="card">
+<h2>Manage Categories</h2>
+
+<input id="catName" placeholder="Category name">
+<button class="addBtn" onclick="addCategory()">Add Category</button>
+
+<div class="list" id="catList"></div>
+</div>
+
+<!-- FLOORS -->
+<div class="card">
+<h2>Manage Floors</h2>
+
+<input id="floorName" placeholder="Floor name (Ground, 1st...)">
+<button class="addBtn" onclick="addFloor()">Add Floor</button>
+
+<div class="list" id="floorList"></div>
+</div>
+
+</div>
+
+<script type="module">
+
+import { db } from './js/firebase-config.js';
+import {
+collection,
+addDoc,
+getDocs,
+deleteDoc,
+doc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+console.log("Mall Structure page opened");
+
+const catList=document.getElementById("catList");
+const floorList=document.getElementById("floorList");
+
+/* ADD CATEGORY */
+window.addCategory = async ()=>{
+
+const name=catName.value.trim();
+
+if(!name){
+alert("Enter category");
+console.warn("Category add blocked — empty");
+return;
+}
+
+console.log("Adding category:",name);
+
+await addDoc(collection(db,"categories"),{name});
+
+catName.value="";
+loadCategories();
+
+};
+
+/* LOAD CATEGORY */
+async function loadCategories(){
+
+console.log("Loading categories...");
+
+catList.innerHTML="";
+
+const snap=await getDocs(collection(db,"categories"));
+
+snap.forEach(c=>{
+catList.innerHTML+=`
+<div class="item">
+<span>${c.data().name}</span>
+<button class="delete" onclick="delCat('${c.id}')">Delete</button>
+</div>`;
+});
+
+console.log("Categories loaded:",snap.size);
+
+}
+
+/* DELETE CAT */
+window.delCat=async(id)=>{
+console.log("Deleting category:",id);
+await deleteDoc(doc(db,"categories",id));
+loadCategories();
+};
+
+/* ADD FLOOR */
+window.addFloor = async ()=>{
+
+const name=floorName.value.trim();
+
+if(!name){
+alert("Enter floor");
+console.warn("Floor add blocked — empty");
+return;
+}
+
+console.log("Adding floor:",name);
+
+await addDoc(collection(db,"floors"),{name});
+
+floorName.value="";
+loadFloors();
+
+};
+
+/* LOAD FLOORS */
+async function loadFloors(){
+
+console.log("Loading floors...");
+
+floorList.innerHTML="";
+
+const snap=await getDocs(collection(db,"floors"));
+
+snap.forEach(f=>{
+floorList.innerHTML+=`
+<div class="item">
+<span>${f.data().name}</span>
+<button class="delete" onclick="delFloor('${f.id}')">Delete</button>
+</div>`;
+});
+
+console.log("Floors loaded:",snap.size);
+
+}
+
+/* DELETE FLOOR */
+window.delFloor=async(id)=>{
+console.log("Deleting floor:",id);
+await deleteDoc(doc(db,"floors",id));
+loadFloors();
+};
+
+loadCategories();
+loadFloors();
+
+</script>
+
+</body>
+</html>

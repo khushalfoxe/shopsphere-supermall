@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Shop | ShopSphere</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Poppins;
+}
+
+body{
+background:linear-gradient(135deg,#000000,#1a1a1a);
+color:white;
+}
+
+/* NAVBAR */
+.navbar{
+display:flex;
+justify-content:space-between;
+padding:20px 60px;
+background:rgba(0,0,0,0.8);
+border-bottom:1px solid rgba(255,215,0,0.3);
+}
+
+.logo{
+font-weight:600;
+font-size:20px;
+color:gold;
+}
+
+.navbar a{
+text-decoration:none;
+color:gold;
+}
+
+/* CONTAINER */
+.container{
+max-width:700px;
+margin:auto;
+padding:40px 20px;
+}
+
+/* FORM */
+.form{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(12px);
+padding:25px;
+border-radius:16px;
+border:1px solid rgba(255,215,0,0.3);
+}
+
+.form h2{
+color:gold;
+margin-bottom:15px;
+}
+
+input,select,textarea{
+width:100%;
+padding:12px;
+margin:12px 0;
+border-radius:8px;
+border:1px solid rgba(255,215,0,0.3);
+background:black;
+color:white;
+}
+
+textarea{
+resize:none;
+height:90px;
+}
+
+/* BUTTON */
+button{
+width:100%;
+padding:14px;
+background:linear-gradient(45deg,gold,#d4af37);
+border:none;
+color:black;
+font-weight:600;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+<div class="logo">ShopSphere Admin</div>
+<a href="dashboard.html">← Dashboard</a>
+</div>
+
+<div class="container">
+
+<div class="form">
+
+<h2>Add Shop</h2>
+
+<input id="name" placeholder="Shop Name">
+
+<select id="category">
+<option>Fashion</option>
+<option>Electronics</option>
+<option>Food</option>
+<option>Sports</option>
+<option>Beauty</option>
+</select>
+
+<select id="floor">
+<option>Ground Floor</option>
+<option>1st Floor</option>
+<option>2nd Floor</option>
+<option>3rd Floor</option>
+</select>
+
+<textarea id="desc" placeholder="Shop Description"></textarea>
+
+<button onclick="addShop()">Add Shop</button>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { db } from './js/firebase-config.js';
+import { collection, addDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+console.log("Add Shop page loaded");
+
+/* ADD SHOP */
+window.addShop = async ()=>{
+
+const name=document.getElementById("name").value.trim();
+const category=document.getElementById("category").value;
+const floor=document.getElementById("floor").value;
+const desc=document.getElementById("desc").value.trim();
+
+console.log("Attempting to add shop:", name);
+
+if(!name){
+alert("Enter shop name");
+console.warn("Shop creation blocked — name empty");
+return;
+}
+
+try{
+
+await addDoc(collection(db,"shops"),{
+name,
+category,
+floor,
+description:desc,
+created:new Date()
+});
+
+console.log("Shop added successfully:", name);
+
+alert("✅ Shop Added Successfully!");
+
+/* Clear form */
+document.getElementById("name").value="";
+document.getElementById("desc").value="";
+
+}catch(err){
+
+console.error("Error adding shop:", err.message);
+alert("❌ "+err.message);
+
+}
+
+};
+
+</script>
+
+</body>
+</html>

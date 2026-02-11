@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShopSphere Mall</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
+
+body{
+color:white;
+min-height:100vh;
+background:
+linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.65)),
+url("https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=2000");
+background-size:cover;
+background-attachment:fixed;
+}
+
+/* NAVBAR */
+.navbar{
+display:flex;
+justify-content:space-between;
+padding:18px 40px;
+background:rgba(0,0,0,0.4);
+backdrop-filter:blur(14px);
+}
+
+/* FILTER BAR */
+.filterBar{
+display:flex;
+gap:15px;
+padding:15px 40px;
+justify-content:center;
+flex-wrap:wrap;
+}
+
+.goldSelect{
+background:linear-gradient(45deg,#d4af37,#f5d77a);
+color:black;
+padding:12px 18px;
+border-radius:25px;
+border:none;
+font-weight:600;
+}
+
+/* GRID */
+.grid{
+max-width:1500px;
+margin:auto;
+padding:30px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(420px,1fr));
+gap:28px;
+}
+
+/* CARD */
+.card{
+background:rgba(255,255,255,0.15);
+backdrop-filter:blur(20px);
+border-radius:22px;
+padding:35px;
+cursor:pointer;
+transition:0.35s;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+.card:hover{
+transform:translateY(-12px) scale(1.03);
+background:rgba(255,255,255,0.25);
+}
+
+.title{
+font-size:22px;
+font-weight:600;
+margin-bottom:5px;
+}
+
+.meta{
+opacity:0.8;
+}
+
+.offer{
+background:rgba(255,215,0,0.3);
+padding:6px;
+border-radius:6px;
+margin-top:8px;
+font-size:13px;
+}
+
+/* POPUP */
+.popup{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.7);
+display:none;
+align-items:center;
+justify-content:center;
+}
+
+.popupBox{
+background:rgba(255,255,255,0.15);
+backdrop-filter:blur(20px);
+padding:30px;
+border-radius:16px;
+width:360px;
+max-height:80vh;
+overflow:auto;
+}
+
+/* COMPARE BUTTON */
+#compareBtn{
+position:fixed;
+bottom:25px;
+right:25px;
+width:65px;
+height:65px;
+border-radius:50%;
+background:gold;
+color:black;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:26px;
+cursor:pointer;
+box-shadow:0 0 20px gold;
+}
+
+button{
+padding:12px;
+border:none;
+border-radius:6px;
+background:gold;
+cursor:pointer;
+width:100%;
+margin-top:10px;
+font-weight:600;
+}
+
+.compareRow{
+margin-bottom:18px;
+padding:12px;
+background:rgba(255,255,255,0.12);
+border-radius:10px;
+}
+
+hr{
+margin:15px 0;
+opacity:0.4;
+}
+
+/* SCROLL REVEAL */
+.reveal{
+opacity:0;
+transform:translateY(20px);
+transition:0.7s;
+}
+.reveal.show{
+opacity:1;
+transform:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+<div>ShopSphere ✨</div>
+<a href="login.html" style="color:white;">Logout</a>
+</div>
+
+<!-- FILTERS -->
+<div class="filterBar">
+<select id="catFilter" class="goldSelect"></select>
+<select id="floorFilter" class="goldSelect"></select>
+</div>
+
+<!-- GRID -->
+<div class="grid" id="grid"></div>
+
+<!-- SHOP POPUP -->
+<div class="popup" id="shopPopup">
+<div class="popupBox" id="shopDetails"></div>
+</div>
+
+<!-- COMPARE -->
+<div id="compareBtn">⚖</div>
+
+<div class="popup" id="comparePopup">
+<div class="popupBox">
+
+<h3>Compare Products</h3>
+
+<select id="cp1"></select>
+<select id="cp2"></select>
+
+<button onclick="runCompare()">Compare</button>
+
+<div id="cResult"></div>
+
+<button onclick="comparePopup.style.display='none'">Close</button>
+
+</div>
+</div>
+
+<script type="module">
+
+import { db } from './js/firebase-config.js';
+import { collection,getDocs }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+console.log("User page opened");
+
+let shops=[],products=[],offers=[];
+
+/* LOAD DATA */
+async function loadAll(){
+
+console.log("Loading data...");
+
+const shopSnap=await getDocs(collection(db,"shops"));
+const prodSnap=await getDocs(collection(db,"products"));
+const offerSnap=await getDocs(collection(db,"offers"));
+const catSnap=await getDocs(collection(db,"categories"));
+const floorSnap=await getDocs(collection(db,"floors"));
+
+shops=[];products=[];offers=[];
+
+shopSnap.forEach(s=>shops.push(s.data()));
+prodSnap.forEach(p=>products.push(p.data()));
+offerSnap.forEach(o=>offers.push(o.data()));
+
+catFilter.innerHTML="<option value=''>All Categories</option>";
+catSnap.forEach(c=>{
+catFilter.innerHTML+=`<option>${c.data().name}</option>`;
+});
+
+floorFilter.innerHTML="<option value=''>All Floors</option>";
+floorSnap.forEach(f=>{
+floorFilter.innerHTML+=`<option>${f.data().name}</option>`;
+});
+
+cp1.innerHTML=""; cp2.innerHTML="";
+products.forEach(p=>{
+cp1.innerHTML+=`<option>${p.name}</option>`;
+cp2.innerHTML+=`<option>${p.name}</option>`;
+});
+
+console.log("Data loaded successfully");
+
+renderShops();
+}
+
+loadAll();
+
+/* RENDER */
+function renderShops(){
+
+grid.innerHTML="";
+
+shops.forEach(shop=>{
+
+if(catFilter.value && shop.category!==catFilter.value) return;
+if(floorFilter.value && shop.floor!==floorFilter.value) return;
+
+const so=offers.filter(o=>o.shop===shop.name);
+
+let offerHTML="";
+so.slice(0,2).forEach(o=>{
+offerHTML+=`<div class="offer">${o.title} ${o.discount}% OFF</div>`;
+});
+
+grid.innerHTML+=`
+<div class="card reveal" onclick="openShop('${shop.name}')">
+<div class="title">${shop.name}</div>
+<div class="meta">${shop.category} • ${shop.floor}</div>
+${offerHTML}
+</div>`;
+});
+
+observeReveals();
+}
+
+catFilter.onchange=renderShops;
+floorFilter.onchange=renderShops;
+
+/* SHOP POPUP */
+window.openShop=(name)=>{
+
+console.log("Opening shop:",name);
+
+const shop=shops.find(s=>s.name===name);
+const sp=products.filter(p=>p.shop===name);
+const so=offers.filter(o=>o.shop===name);
+
+let html=`<h3>${shop.name}</h3>
+<p>${shop.category} • ${shop.floor}</p>
+
+<h4>Products</h4>`;
+
+sp.forEach(p=>{
+html+=`<p>${p.name} — ₹${p.price}</p>`;
+});
+
+html+=`<h4>Offers</h4>`;
+so.forEach(o=>{
+html+=`<p>${o.title} ${o.discount}% OFF</p>`;
+});
+
+html+=`<button onclick="shopPopup.style.display='none'">Close</button>`;
+
+shopDetails.innerHTML=html;
+shopPopup.style.display="flex";
+};
+
+/* COMPARE */
+compareBtn.onclick=()=>comparePopup.style.display="flex";
+
+window.runCompare=()=>{
+
+const a=products.find(p=>p.name===cp1.value);
+const b=products.find(p=>p.name===cp2.value);
+
+cResult.innerHTML=`
+
+<div class="compareRow">
+<b>${a.name}</b><br>
+Shop: ${a.shop}<br>
+Price: ₹${a.price}
+</div>
+
+<div class="compareRow">
+<b>${b.name}</b><br>
+Shop: ${b.shop}<br>
+Price: ₹${b.price}
+</div>
+
+<hr>
+
+<b>Cheaper:</b> ${a.price<b.price?a.name:b.name}
+`;
+
+console.log("Compared:",a.name,"vs",b.name);
+};
+
+/* SCROLL REVEAL */
+const observer=new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting){
+e.target.classList.add("show");
+}
+});
+});
+
+function observeReveals(){
+document.querySelectorAll(".reveal").forEach(el=>{
+observer.observe(el);
+});
+}
+
+</script>
+
+</body>
+</html>

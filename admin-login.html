@@ -1,0 +1,101 @@
+<script>
+if(localStorage.getItem("isAdmin")!=="true"){
+alert("Access Denied");
+window.location="admin-login.html";
+}
+</script>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login | ShopSphere</title>
+
+<style>
+
+body{
+font-family:Poppins;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+background:black;
+color:white;
+}
+
+.box{
+background:#111;
+padding:40px;
+border-radius:12px;
+width:320px;
+text-align:center;
+}
+
+input,button{
+width:100%;
+padding:12px;
+margin:12px 0;
+border:none;
+border-radius:6px;
+}
+
+button{
+background:gold;
+font-weight:600;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>Admin Login</h2>
+
+<input id="adminId" placeholder="Admin ID">
+<input id="adminPass" type="password" placeholder="Password">
+
+<button onclick="adminLogin()">Login</button>
+
+<p id="msg"></p>
+
+</div>
+
+<script>
+
+function adminLogin(){
+
+const id=document.getElementById("adminId").value.trim();
+const pass=document.getElementById("adminPass").value.trim();
+
+/* YOUR CUSTOM CREDENTIALS */
+const ADMIN_ID="admin";
+const ADMIN_PASS="1234";
+
+if(id===ADMIN_ID && pass===ADMIN_PASS){
+
+/* Save session */
+localStorage.setItem("isAdmin","true");
+
+/* Redirect */
+window.location="dashboard.html";
+
+}else{
+document.getElementById("msg").innerText="❌ Invalid Admin Login";
+}
+
+}
+
+</script>
+<button onclick="logout()">Logout</button>
+
+<script>
+function logout(){
+localStorage.removeItem("isAdmin");
+window.location="admin-login.html";
+}
+</script>
+
+</body>
+</html>

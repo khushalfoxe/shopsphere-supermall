@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Shops | ShopSphere</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
+
+body{
+background:linear-gradient(135deg,#000000,#1a1a1a);
+color:white;
+}
+
+/* NAVBAR */
+.navbar{
+display:flex;
+justify-content:space-between;
+padding:20px 60px;
+background:rgba(0,0,0,0.85);
+border-bottom:1px solid rgba(255,215,0,0.3);
+}
+
+.logo{
+font-weight:600;
+font-size:20px;
+color:gold;
+}
+
+.navbar a{
+color:gold;
+text-decoration:none;
+}
+
+/* CONTAINER */
+.container{
+max-width:900px;
+margin:auto;
+padding:40px 20px;
+}
+
+/* SHOP CARD */
+.shop{
+background:rgba(255,255,255,0.08);
+padding:20px;
+border-radius:14px;
+margin-bottom:15px;
+border:1px solid rgba(255,215,0,0.25);
+}
+
+.shop h3{
+color:gold;
+}
+
+.shop p{
+margin:5px 0;
+opacity:0.85;
+}
+
+.actions{margin-top:10px;}
+
+button{
+padding:8px 14px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-weight:600;
+margin-right:5px;
+}
+
+.edit{
+background:gold;
+color:black;
+}
+
+.delete{
+background:red;
+color:white;
+}
+
+/* MODAL */
+.modal{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.7);
+justify-content:center;
+align-items:center;
+}
+
+.modal-box{
+background:black;
+padding:25px;
+border-radius:12px;
+width:300px;
+border:1px solid gold;
+}
+
+.modal input, .modal textarea{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:6px;
+border:1px solid gold;
+background:black;
+color:white;
+}
+
+.save{
+background:gold;
+color:black;
+width:100%;
+padding:12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+<div class="logo">ShopSphere Admin</div>
+<a href="dashboard.html">← Dashboard</a>
+</div>
+
+<div class="container">
+<h2>Manage Shops</h2>
+<div id="shopList"></div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal" id="modal">
+<div class="modal-box">
+
+<h3>Edit Shop</h3>
+
+<input id="editName">
+<input id="editCategory">
+<input id="editFloor">
+<textarea id="editDesc"></textarea>
+
+<button class="save" onclick="updateShop()">Save Changes</button>
+
+</div>
+</div>
+
+<script type="module">
+
+import { db } from './js/firebase-config.js';
+import {
+collection,
+getDocs,
+deleteDoc,
+doc,
+updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+console.log("Manage Shops page opened");
+
+const shopList=document.getElementById("shopList");
+let currentId="";
+
+/* LOAD SHOPS */
+async function loadShops(){
+
+console.log("Loading shops...");
+
+shopList.innerHTML="Loading...";
+
+const snap=await getDocs(collection(db,"shops"));
+
+shopList.innerHTML="";
+
+snap.forEach(s=>{
+
+const d=s.data();
+
+shopList.innerHTML+=`
+<div class="shop">
+<h3>${d.name}</h3>
+<p>Category: ${d.category}</p>
+<p>Floor: ${d.floor}</p>
+<p>${d.description||""}</p>
+
+<div class="actions">
+<button class="edit" onclick="openEdit('${s.id}','${d.name}','${d.category}','${d.floor}','${d.description||""}')">Edit</button>
+<button class="delete" onclick="delShop('${s.id}')">Delete</button>
+</div>
+</div>
+`;
+
+});
+
+console.log("Shops loaded:",snap.size);
+
+}
+
+/* DELETE */
+window.delShop=async(id)=>{
+
+if(confirm("Delete this shop?")){
+console.log("Deleting shop:",id);
+await deleteDoc(doc(db,"shops",id));
+console.log("Shop deleted");
+loadShops();
+}
+
+};
+
+/* OPEN EDIT */
+window.openEdit=(id,name,cat,floor,desc)=>{
+
+console.log("Editing shop:",name);
+
+currentId=id;
+
+editName.value=name;
+editCategory.value=cat;
+editFloor.value=floor;
+editDesc.value=desc;
+
+modal.style.display="flex";
+
+};
+
+/* UPDATE */
+window.updateShop=async()=>{
+
+console.log("Updating shop:",editName.value);
+
+await updateDoc(doc(db,"shops",currentId),{
+name:editName.value,
+category:editCategory.value,
+floor:editFloor.value,
+description:editDesc.value
+});
+
+console.log("Shop updated");
+
+alert("✅ Updated");
+modal.style.display="none";
+loadShops();
+
+};
+
+loadShops();
+
+</script>
+
+</body>
+</html>

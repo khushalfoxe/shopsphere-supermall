@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Products | ShopSphere</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
+
+body{
+background:linear-gradient(135deg,#000000,#1a1a1a);
+color:white;
+}
+
+/* NAVBAR */
+.navbar{
+display:flex;
+justify-content:space-between;
+padding:20px 60px;
+background:rgba(0,0,0,0.85);
+border-bottom:1px solid rgba(255,215,0,0.3);
+}
+
+.logo{
+font-weight:600;
+font-size:20px;
+color:gold;
+}
+
+.navbar a{
+color:gold;
+text-decoration:none;
+}
+
+/* CONTAINER */
+.container{
+max-width:700px;
+margin:auto;
+padding:40px 20px;
+}
+
+/* FORM */
+.form{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(12px);
+padding:25px;
+border-radius:16px;
+border:1px solid rgba(255,215,0,0.3);
+}
+
+.form h2{
+color:gold;
+margin-bottom:10px;
+}
+
+input,select,textarea{
+width:100%;
+padding:12px;
+margin:12px 0;
+border-radius:8px;
+border:1px solid gold;
+background:black;
+color:white;
+}
+
+textarea{
+resize:none;
+height:90px;
+}
+
+/* BUTTON */
+button{
+width:100%;
+padding:14px;
+background:linear-gradient(45deg,gold,#d4af37);
+border:none;
+color:black;
+font-weight:600;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{opacity:0.9;}
+
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+<div class="logo">ShopSphere Admin</div>
+<a href="dashboard.html">← Dashboard</a>
+</div>
+
+<div class="container">
+
+<div class="form">
+
+<h2>Add Product</h2>
+
+<label>Select Shop</label>
+<select id="shopSelect"></select>
+
+<input id="pname" placeholder="Product Name">
+<input id="brand" placeholder="Brand">
+<input id="price" type="number" placeholder="Price">
+<textarea id="desc" placeholder="Description"></textarea>
+
+<button onclick="addProduct()">Add Product</button>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { db } from './js/firebase-config.js';
+import {
+collection,
+addDoc,
+getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+console.log("Add Product page opened");
+
+const shopSelect=document.getElementById("shopSelect");
+
+/* LOAD SHOPS */
+async function loadShops(){
+
+console.log("Loading shops for dropdown...");
+
+const snap=await getDocs(collection(db,"shops"));
+
+shopSelect.innerHTML="";
+
+snap.forEach(s=>{
+shopSelect.innerHTML+=`
+<option value="${s.data().name}">
+${s.data().name}
+</option>`;
+});
+
+console.log("Shops loaded:",snap.size);
+
+}
+
+loadShops();
+
+/* ADD PRODUCT */
+window.addProduct = async ()=>{
+
+const name=pname.value.trim();
+const brandVal=brand.value.trim();
+const priceVal=price.value;
+const descVal=desc.value.trim();
+const shop=shopSelect.value;
+
+console.log("Attempting to add product:",name);
+
+if(!name || !priceVal){
+alert("Fill required fields");
+console.warn("Product add blocked — missing fields");
+return;
+}
+
+try{
+
+await addDoc(collection(db,"products"),{
+name,
+brand:brandVal,
+price:priceVal,
+description:descVal,
+shop,
+created:new Date()
+});
+
+console.log("Product added:",name);
+
+alert("✅ Product Added!");
+
+pname.value="";
+brand.value="";
+price.value="";
+desc.value="";
+
+}catch(err){
+
+console.error("Error adding product:",err.message);
+alert("❌ "+err.message);
+
+}
+
+};
+
+</script>
+
+</body>
+</html>

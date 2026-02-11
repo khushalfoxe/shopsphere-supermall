@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | ShopSphere</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
+
+body{
+background:linear-gradient(135deg,#000000,#1a1a1a);
+color:white;
+min-height:100vh;
+}
+
+/* NAVBAR */
+.navbar{
+display:flex;
+justify-content:space-between;
+padding:20px 60px;
+background:rgba(0,0,0,0.7);
+backdrop-filter:blur(10px);
+border-bottom:1px solid rgba(255,215,0,0.3);
+}
+
+.logo{
+font-weight:600;
+color:gold;
+font-size:20px;
+}
+
+.logout{
+text-decoration:none;
+color:gold;
+font-weight:500;
+}
+
+/* HERO */
+.hero{
+padding:50px;
+text-align:center;
+}
+
+.hero h1{
+font-size:34px;
+color:gold;
+margin-bottom:10px;
+}
+
+/* GRID */
+.grid{
+max-width:1100px;
+margin:auto;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:25px;
+padding:20px;
+}
+
+/* CARD */
+.card{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(12px);
+padding:30px;
+border-radius:18px;
+border:1px solid rgba(255,215,0,0.25);
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-10px) scale(1.02);
+background:rgba(255,215,0,0.08);
+}
+
+.card h3{
+color:gold;
+margin-bottom:10px;
+}
+
+.card p{
+opacity:0.8;
+margin-bottom:15px;
+}
+
+.card a{
+display:inline-block;
+padding:10px 18px;
+background:linear-gradient(45deg,gold,#d4af37);
+color:black;
+text-decoration:none;
+border-radius:8px;
+font-size:14px;
+font-weight:600;
+}
+
+/* STATS */
+.stats{
+display:flex;
+justify-content:center;
+gap:30px;
+margin-top:20px;
+flex-wrap:wrap;
+}
+
+.stat{
+background:rgba(255,255,255,0.08);
+padding:15px 25px;
+border-radius:12px;
+border:1px solid rgba(255,215,0,0.25);
+}
+
+.stat b{
+color:gold;
+font-size:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+<div class="logo">ShopSphere Admin</div>
+<a href="index.html" class="logout">Logout</a>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+<h1>Mall Management Dashboard</h1>
+<p>Control shops, products, offers & categories</p>
+
+<div class="stats">
+<div class="stat">Shops: <b id="shopCount">0</b></div>
+<div class="stat">Products: <b id="productCount">0</b></div>
+<div class="stat">Offers: <b id="offerCount">0</b></div>
+</div>
+
+</div>
+
+<!-- MODULES -->
+<div class="grid">
+
+<div class="card">
+<h3>Create Shop</h3>
+<p>Add new shops with category & floor.</p>
+<a href="shopdetails.html">Open</a>
+</div>
+
+<div class="card">
+<h3>Manage Shops</h3>
+<p>Edit or delete existing shops.</p>
+<a href="manageshops.html">Open</a>
+</div>
+
+<div class="card">
+<h3>Product Management</h3>
+<p>Add products under each shop.</p>
+<a href="products.html">Open</a>
+</div>
+
+<div class="card">
+<h3>Offer Management</h3>
+<p>Add & manage offers.</p>
+<a href="offers.html">Open</a>
+</div>
+
+<div class="card">
+<h3>Category & Floor</h3>
+<p>Manage mall structure.</p>
+<a href="categories.html">Open</a>
+</div>
+
+</div>
+
+<script type="module">
+
+import { db } from './js/firebase-config.js';
+import { collection,getDocs }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+console.log("Admin dashboard opened");
+
+/* LIVE COUNTS */
+
+async function loadCounts(){
+
+const shops=await getDocs(collection(db,"shops"));
+document.getElementById("shopCount").innerText=shops.size;
+console.log("Shops count loaded:",shops.size);
+
+const products=await getDocs(collection(db,"products"));
+document.getElementById("productCount").innerText=products.size;
+console.log("Products count loaded:",products.size);
+
+const offers=await getDocs(collection(db,"offers"));
+document.getElementById("offerCount").innerText=offers.size;
+console.log("Offers count loaded:",offers.size);
+
+}
+
+loadCounts();
+
+</script>
+
+</body>
+</html>
